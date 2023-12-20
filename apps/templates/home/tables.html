@@ -1,0 +1,48 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tables {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+  <div class="content">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card card-plain">
+          <div class="card-header">
+            <h2 class="card-title"> Table Of All Result</h2>
+          </div>
+          <div class="card-body">
+            <div class="table-full-width table-responsive">
+            <div class="table-responsive">
+                <table class="table tablesorter" id="imageTable">
+                  <thead class=" text-primary">
+                      <tr>
+                          <th class="text-center">ID</th>
+                          <th class="text-center">Name</th>
+                          <th class="text-center">Time</th>
+                          <th class="text-center">Day</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      
+                  </tbody>
+                </table>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+<script type="module" src="{{ config.ASSETS_ROOT }}/js/database.js"></script>
+
+{% endblock javascripts %}
