@@ -13,11 +13,11 @@
         <div class="card card-tasks">
             <div class="card-header d-flex justify-content-between">
               <button id ="snap" class="btn btn-primary">Capture</button>
-              <button class="btn btn-primary" onclick="uploadImage()">Upload Image</button>
+              <button class="btn btn-primary" id ="upload">Upload Image</button>
             </div>
             <div class="card-body ">
               <div class="table-full-width table-responsive" style="text-align: center;">
-                  <video id="video" width="600" height="600" autoplay ></video>
+                  <video id="video" width="580" height= auto autoplay controls ></video>
               </div>
           </div>     
         </div>
@@ -28,8 +28,9 @@
                   <h3 class="title d-inline">Result</h3>
               </div>
               <div class="card-body ">
-                  <!-- <div class="table-full-width table-responsive"> -->
-                    <canvas id="canvas" width="640" height="600"></canvas>
+                  <div class="table-full-width table-responsive">
+                    <canvas id="canvas" width="580" height="400"></canvas>
+              
                   </div>
               </div>            
           </div> 

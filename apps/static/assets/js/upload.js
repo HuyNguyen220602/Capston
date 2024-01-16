@@ -1,7 +1,7 @@
 // Your web app's Firebase configuration
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-analytics.js";
-import { getStorage, ref } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-storage.js";
+import { getStorage, ref, listAll, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-storage.js";
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -19,87 +19,94 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const storage = getStorage(app);
-const storageRef = ref(storage, 'gs://webcapstone-dd29e.appspot.com/result/');
-
-// Function to upload image
-function uploadImage() {
-  const storageRef = ref(storage, 'gs://webcapstone-dd29e.appspot.com/result/');
-  const file = document.querySelector("#photo").files[0];
-  const name = new Date() + "_" + file.name;
-  const metadata = {
-    contentType: file.type
-  };
-  const task = storageRef.child(name).put(file, metadata);
-  task
-    .then(snapshot => snapshot.ref.getDownloadURL())
-    .then(url => {
-      console.log(url);
-      alert("Image Upload Successful");
-      const image = document.querySelector("#image");
-      image.src = url;
-    });
-}
+const storageRef = ref(storage);
+const imagesRef = ref(storage, 'result');
 
 // Webcam code
 
+    // Get DOM elements
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
-const snap = document.getElementById('snap');
+const snapButton = document.getElementById('snap');
+const uploadButton = document.getElementById('upload');
 
 const constraints = {
   audio: false,
   video: {
-    width: 640, // Adjusted width
-    height: 480 // Adjusted height
+    width: 1080, // Adjusted width
+    height: 720 // Adjusted height
   }
 };
 
-// Start webcam
-async function init() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-    handleStream(stream);
+    // Get webcam stream and handle it
+    async function init() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        handleStream(stream);
+      } catch (error) {
+        console.log("Error accessing camera:", error);
+      }
+    }
 
-    
-  } catch (error) {
-    console.log("Error accessing camera:", error);
-  }
+    // Handle webcam stream
+    function handleStream(stream) {
+      window.stream = stream;
+      video.srcObject = stream;
+    }
+
+ // Function to take a snapshot
+ function takeSnapshot() {
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+  alert('Snapshot taken successfully!');
 }
 
-function handleStream(stream) {
-  window.stream = stream;
-  video.srcObject = stream;
+
+// Function to upload image to Firebase Storage
+async function uploadToFirebase() {
+  const imageDataUrl = canvas.toDataURL('image/png');
+
+  // Convert the data URL to a Blob
+  const byteString = atob(imageDataUrl.split(',')[1]);
+  const mimeString = imageDataUrl.split(',')[0].split(':')[1].split(';')[0];
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+  const blob = new Blob([ab], { type: mimeString });
+
+  // Generate the file name with the counter
+  const fileName = 'Result_'  + Date.now() + '.png';
+  
+  // Create a reference to the desired location in your storage bucket
+  const imageRef = ref(storage, 'result/' + fileName);
+
+  // Upload the image to Firebase Storage
+  const metadata = {
+    contentType: 'image/png'
+  };
+
+  const task = uploadBytesResumable(imageRef, blob, metadata);
+
+  // Listen for state changes, errors, and completion of the upload.
+  task
+    .then(snapshot => getDownloadURL(snapshot.ref))
+    .then(url => {
+      console.log('File available at', url);
+      alert('Image Upload Successful');
+    })
+    .catch(error => {
+      console.error('Error uploading image:', error);
+      alert('Error uploading image. Please try again.');
+    });
 }
 
+// Add event listeners to the buttons
+snapButton.addEventListener('click', takeSnapshot);
+uploadButton.addEventListener('click', uploadToFirebase);
 
-var context = canvas.getContext('2d');
-
-snap.addEventListener('click', function () {
-  context.drawImage(video, 0, 0, 640, 480);
-  var image = new Image();
-
-  image.id = "pic";
-
-  image.src = canvas.toDataURL("image/png");
-
-  console.log(image.src);
-
-  var button = document.createElement("button");
-
-  button.textContent = "Upload Image";
-
-  document.body.appendChild(button);
-
-  button.onclick = function () {
-    const storageRef = ref(storage);
-    storageRef.child(new Date() + '-' + 'base64').putString(image.src, 'data_url')
-      .then(function (snapshot) {
-        console.log("Image Uploaded");
-        alert("Image Uploaded");
-      });
-  }
-});
-
-handleStream();
+// Initialize the webcam and set up the click event for the snap button
 init();
-uploadImage();
+handleStream();
